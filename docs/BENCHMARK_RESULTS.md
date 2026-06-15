@@ -72,7 +72,7 @@ With `findings_draft_v2_pass.json`: **100%** expected finding token match (3/3).
 ## Spoliation + agent loop
 
 ```bash
-bash scripts/spoliation_test.sh    # 17 tests — PASS/FAIL banner
+bash scripts/spoliation_test.sh    # 22 tests — PASS/FAIL banner
 bash scripts/agent_loop.sh examples/sample_exports   # v1 REJECT → auto-correct → PASS
 ```
 

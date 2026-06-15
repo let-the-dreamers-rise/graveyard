@@ -101,7 +101,7 @@ python3 mcp_graveyard_server.py   # show 8 tools in mcp/README.md
 
 ## Close
 
-> "GRAVEYARD: 8 MCP tools, 17 spoliation tests, measured F1, and an agent loop that proves autonomous self-correction. GitHub in description."
+> "GRAVEYARD: 8 MCP tools, 22 spoliation tests, measured F1, and an agent loop that proves autonomous self-correction. GitHub in description."
 
 **End card:** https://github.com/let-the-dreamers-rise/graveyard
 

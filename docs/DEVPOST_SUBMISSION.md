@@ -25,7 +25,7 @@ GRAVEYARD is an **autonomous verification layer**, not a human review portal:
 3. **`scripts/agent_loop.sh`** — Deterministic self-correction: v1 REJECT → engine-facts auto-correct → PASS (no LLM)
 4. **`scripts/benchmark_accuracy.py`** — F1, false positive rate, hallucination catch vs simulated baseline
 5. **`mcp_graveyard_server.py`** — **8** typed MCP tools (read-only, no shell)
-6. **`tests/test_spoliation.py`** — **17** spoliation tests with PASS/FAIL demo runner
+6. **`tests/test_spoliation.py`** — **22** spoliation tests with PASS/FAIL demo runner
 7. **`scripts/run_live_triage.sh`** — One-command SIFT pipeline with vol.py auto-detect
 
 Workflow: Volatility → engine → netscan → timeline (optional) → draft findings → verifier REJECT or PASS → report only on PASS.
@@ -57,6 +57,7 @@ bash scripts/spoliation_test.sh
 | Hallucination catch | **100%** (2/2) | 0% | Prompt claims vary |
 | Self-correction | **Architectural loop** | None | Varies |
 | MCP tools | **8 read-only** | 3-lite common | Platform bundles |
+| Spoliation tests | **22** | unmeasured | Varies |
 | Multi-artifact | Engine + contradictions | Ghost-only | Full chain (EvidenceChain) |
 
 *Honest note: sample-case metrics are reproducible; live SRL-2018 numbers require your memory image.*
@@ -66,7 +67,7 @@ bash scripts/spoliation_test.sh
 | Tiebreaker criterion | GRAVEYARD proof |
 |---------------------|-----------------|
 | **Autonomous self-correction** | `agent_loop.sh`: exit 1 → `auto_correct_findings.py` → exit 0; logged, no LLM |
-| **Constraint implementation** | 17 spoliation tests + architectural verifier + export traversal blocking |
+| **Constraint implementation** | 22 spoliation tests + architectural verifier + export traversal blocking |
 | **IR accuracy** | Benchmark JSON with F1/FPR; baseline comparison file for judges |
 | **Multi-artifact** | Timeline parity + memory/disk contradiction report (lite, extensible) |
 | **Reproducibility** | `run_demo.ps1`, ground truth JSON, download_sample.sh, DATASETS.md URLs |
@@ -91,7 +92,7 @@ bash scripts/spoliation_test.sh
 - **100% measured ghost/orphan recall**, 0 false positives on sample case
 - **100% hallucination catch** on injected tests
 - **Deterministic agent loop** — architectural self-correction, not prompt retry
-- **8 MCP tools** + **17 spoliation tests** + live triage with vol auto-detect
+- **8 MCP tools** + **22 spoliation tests** + live triage with vol auto-detect
 - **Public dataset documentation** in DATASETS.md
 
 ## What we learned
