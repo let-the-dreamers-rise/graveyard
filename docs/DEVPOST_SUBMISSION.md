@@ -76,13 +76,13 @@ Architecture separates prompt guardrails (AGENTS.md) from architectural guardrai
 
 ## Links
 
-- **GitHub:** https://github.com/YOUR_USERNAME/graveyard
+- **GitHub:** https://github.com/let-the-dreamers-rise/graveyard
 - **Demo video:** https://youtube.com/watch?v=YOUR_VIDEO_ID
 
 ## Try it out
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/graveyard.git
+git clone https://github.com/let-the-dreamers-rise/graveyard.git
 cd graveyard
 python graveyard_correlate.py --exports examples/sample_exports
 python verify_findings.py examples/findings_draft_v1_reject.json --exports examples/sample_exports --json-out

@@ -16,7 +16,7 @@ The tiebreaker metric is **autonomous self-correction**: the agent drafts findin
 ## Quick start (SIFT Workstation)
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/graveyard.git
+git clone https://github.com/let-the-dreamers-rise/graveyard.git
 cd graveyard
 bash install.sh
 ```
@@ -60,7 +60,7 @@ graveyard/
 
 ## Links
 
-- **GitHub:** https://github.com/YOUR_USERNAME/graveyard *(push required — see below)*
+- **GitHub:** https://github.com/let-the-dreamers-rise/graveyard *(push required — see below)*
 - **Demo video:** https://youtube.com/watch?v=YOUR_VIDEO_ID *(record using docs/DEMO_SCRIPT.md)*
 - **Devpost:** Submit using docs/DEVPOST_SUBMISSION.md
 
