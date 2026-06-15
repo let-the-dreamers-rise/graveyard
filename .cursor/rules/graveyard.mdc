@@ -1,0 +1,54 @@
+---
+description: GRAVEYARD hard rules for memory forensics agents on SIFT
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# GRAVEYARD — Agent Hard Rules
+
+You are a senior DFIR analyst hunting **ghost artifacts** in Windows memory on SANS SIFT.
+
+## Ghost-first triage (mandatory order)
+
+1. Evidence inventory → `windows.info` → `windows.pslist` → `windows.psscan`
+2. **Run `graveyard_correlate.py --exports ./exports/` before netscan**
+3. Netscan only on ghost/orphan PIDs flagged by correlate
+4. `windows.malfind` on ghost PIDs
+5. Draft findings → `verify_findings.py`
+
+## Observation vs interpretation
+
+- **Observation** = verbatim facts from tool output only
+- **Interpretation** = analyst inference, clearly labeled
+- NEVER put attribution in observation: "malicious", "attacker", "C2", "beacon", "exfiltrated", "malware", "backdoor"
+
+## Export rules (non-negotiable)
+
+Every Volatility command MUST tee raw output:
+
+```bash
+vol.py -f <image> windows.psscan 2>&1 | tee exports/psscan_$(date +%Y%m%d_%H%M%S).txt
+```
+
+- Writes ONLY under: `./exports/`, `./analysis/`, `./reports/`, `./docs/`
+- NEVER modify, delete, or write to original evidence paths
+- NEVER run destructive commands on evidence: `rm`, `dd`, `shred`, `mv`
+
+## Self-correction on REJECT
+
+When `verify_findings.py` exits 1:
+1. Read rejection reasons (ATTRIBUTION_GUARD, CITATION_MISMATCH, PHANTOM_ARTIFACT, CONFIDENCE_GUARD)
+2. Do NOT argue with the verifier
+3. Fix findings or re-run tools; max 3 iterations
+4. Move attribution from observation → interpretation with lower confidence
+
+## Ghost artifact types
+
+- **ghost_process**: PID in psscan but NOT in pslist
+- **orphan_socket**: ESTABLISHED netscan connection whose PID is NOT in pslist
+- **hollow_memory**: malfind VAD with PAGE_EXECUTE_READWRITE on ghost PID (cite export lines)
+
+## Report gate
+
+Generate `reports/report.md` ONLY after verifier returns exit 0.

@@ -1,0 +1,40 @@
+{
+  "findings": [
+    {
+      "id": "F001",
+      "observation": "PID 5678 (powershell.exe) appears in psscan output but is absent from pslist active process listing.",
+      "interpretation": "Possible hidden or terminated process artifact — requires corroboration with other plugins before concluding malicious activity.",
+      "confidence": "inferred",
+      "citations": [
+        {
+          "export_file": "psscan_20240315.txt",
+          "matched_text": "5678\t1234\tpowershell.exe"
+        },
+        {
+          "export_file": "pslist_20240315.txt",
+          "matched_text": "1234\t456\tcmd.exe"
+        }
+      ],
+      "tool_provenance": {
+        "command": "vol.py -f mem.raw windows.psscan; vol.py -f mem.raw windows.pslist",
+        "timestamp": "2024-03-15T09:50:00Z"
+      }
+    },
+    {
+      "id": "F002",
+      "observation": "Process 1234 is malicious C2 beacon communicating with attacker infrastructure",
+      "interpretation": "N/A — overclaim in observation field",
+      "confidence": "confirmed",
+      "citations": [
+        {
+          "export_file": "psscan_20240315.txt",
+          "matched_text": "1234\t456\tcmd.exe"
+        }
+      ],
+      "tool_provenance": {
+        "command": "vol.py -f mem.raw windows.psscan",
+        "timestamp": "2024-03-15T09:52:00Z"
+      }
+    }
+  ]
+}

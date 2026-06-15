@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/graveyard-dfir/schema/finding.schema.json",
+  "title": "GRAVEYARD Finding",
+  "description": "Structured IR finding with observation/interpretation separation and export citations.",
+  "type": "object",
+  "required": ["id", "observation", "interpretation", "confidence", "citations", "tool_provenance"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^F[0-9]{3,}$",
+      "description": "Unique finding identifier, e.g. F001"
+    },
+    "observation": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Verbatim facts from tool output only — no attribution or intent"
+    },
+    "interpretation": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Analyst inference clearly labeled as inference"
+    },
+    "confidence": {
+      "type": "string",
+      "enum": ["confirmed", "inferred", "speculative"],
+      "description": "confirmed requires corroboration; inferred/speculative for analyst judgment"
+    },
+    "citations": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["export_file", "matched_text"],
+        "properties": {
+          "export_file": {
+            "type": "string",
+            "description": "Path to raw tool export under ./exports/"
+          },
+          "matched_text": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Exact substring that must appear in the export file"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "tool_provenance": {
+      "type": "object",
+      "required": ["command", "timestamp"],
+      "properties": {
+        "command": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

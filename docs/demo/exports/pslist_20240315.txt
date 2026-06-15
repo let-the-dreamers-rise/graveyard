@@ -1,0 +1,9 @@
+Volatility 3 Framework 2.11.0
+Progress:  100.00		PDB scanning finished
+PID	PPID	ImageFileName	Offset(V)	Threads	Handles	SessionId	Wow64	CreateTime	ExitTime
+
+4	0	System.exe	0xfa8002a5a060	96	-	N/A	False	2024-03-15 08:12:01.000 UTC	N/A
+248	4	smss.exe	0xfa8002b3b060	2	-	0	False	2024-03-15 08:12:04.000 UTC	N/A
+312	248	csrss.exe	0xfa8002c1d060	12	-	0	False	2024-03-15 08:12:05.000 UTC	N/A
+456	312	winlogon.exe	0xfa8002d8e060	4	-	0	False	2024-03-15 08:12:06.000 UTC	N/A
+1234	456	cmd.exe	0xfa8003e4b060	1	-	1	False	2024-03-15 09:41:22.000 UTC	N/A

@@ -1,0 +1,48 @@
+{
+  "generated_at": "2026-06-15T22:55:14.769152+00:00",
+  "exports_dir": "C:\\Users\\ASHWIN GOYAL\\OneDrive\\Desktop\\find e\\examples\\sample_exports",
+  "sources": {
+    "psscan": "psscan_20240315.txt",
+    "pslist": "pslist_20240315.txt",
+    "netscan": "netscan_20240315.txt"
+  },
+  "summary": {
+    "pslist_count": 5,
+    "psscan_count": 5,
+    "ghost_count": 1,
+    "orphan_socket_count": 1
+  },
+  "ghosts": [
+    {
+      "type": "ghost_process",
+      "pid": 5678,
+      "ppid": 1234,
+      "image": "powershell.exe",
+      "citations": [
+        {
+          "export_file": "psscan_20240315.txt",
+          "line_number": 9,
+          "matched_text": "5678\t1234\tpowershell.exe\t0xfa8004f2c060\t8\t-\t1\tFalse\t2024-03-15 09:41:45.000 UTC\tN/A"
+        }
+      ]
+    }
+  ],
+  "orphan_sockets": [
+    {
+      "type": "orphan_socket",
+      "pid": 5678,
+      "local_address": "192.168.1.105",
+      "foreign_address": "198.51.100.42",
+      "foreign_port": "4444",
+      "state": "ESTABLISHED",
+      "owner": "powershell.exe",
+      "citations": [
+        {
+          "export_file": "netscan_20240315.txt",
+          "line_number": 6,
+          "matched_text": "0xfa8005a2c060\t5678\t192.168.1.105\t198.51.100.42\t4444\tESTABLISHED\t5678\tpowershell.exe\tTCPv4"
+        }
+      ]
+    }
+  ]
+}
