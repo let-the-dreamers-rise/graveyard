@@ -17,6 +17,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from spoliation_guard import is_export_path_traversal
+
 ATTRIBUTION_TERMS = (
     "exfiltrat",
     "attacker",
@@ -57,6 +59,8 @@ def load_findings(path: Path) -> list[dict[str, Any]]:
 
 
 def read_export(exports_dir: Path, export_file: str) -> str:
+    if is_export_path_traversal(export_file):
+        raise FileNotFoundError(f"EXPORT_PATH_TRAVERSAL: {export_file}")
     candidate = Path(export_file)
     if not candidate.is_absolute():
         candidate = exports_dir / candidate

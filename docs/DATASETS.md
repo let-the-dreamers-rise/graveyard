@@ -1,6 +1,6 @@
 # GRAVEYARD Datasets
 
-Documentation for bundled sample cases, SRL-2018 live paths, and benchmark ground truth.
+Documentation for bundled sample cases, public memory datasets, SRL-2018 live paths, and benchmark ground truth.
 
 ## Bundled sample case
 
@@ -21,6 +21,8 @@ Documentation for bundled sample cases, SRL-2018 live paths, and benchmark groun
 
 **File:** `examples/ground_truth_srl2018_sample.json`
 
+**Live template (fill after triage):** `examples/ground_truth_live_template.json`
+
 Run measured accuracy:
 
 ```bash
@@ -28,7 +30,8 @@ python3 scripts/benchmark_accuracy.py \
   --exports examples/sample_exports \
   --ground-truth examples/ground_truth_srl2018_sample.json \
   --findings examples/findings_draft_v2_pass.json \
-  --output analysis/benchmark_metrics.json
+  --output analysis/benchmark_metrics.json \
+  --baseline-out analysis/baseline_vs_graveyard.json
 ```
 
 ### Disk timeline stub (multi-artifact demo)
@@ -36,11 +39,36 @@ python3 scripts/benchmark_accuracy.py \
 **File:** `examples/disk_timeline_sample.json`
 
 ```bash
-python3 graveyard_timeline.py \
+python3 graveyard_engine.py \
   --exports examples/sample_exports \
   --timeline examples/disk_timeline_sample.json \
-  --output analysis/timeline_parity.json
+  --output analysis/graveyard_engine_report.json
 ```
+
+## Public Windows memory samples (reference URLs)
+
+| Dataset | URL | Notes |
+|---------|-----|-------|
+| **NIST CFReDS** | https://www.nist.gov/itl/ssd/software-quality-group/computer-forensics-reference-data-sets-cfreds | Reference data sets; mostly disk — pair with memory when available |
+| **NIST Hacking Case (2012)** | https://www.cfreds.nist.gov/Hacking_Case.html | Classic disk image; use for timeline parity layer |
+| **NIST Mobile Device Images** | https://www.cfreds.nist.gov/mobile_devices.html | Mobile-focused |
+| **Volatility 3 samples** | https://github.com/volatilityfoundation/volatility3/tree/develop/doc/sample | Official Volatility test images/docs |
+| **Volatility 2 sample docs** | https://github.com/volatilityfoundation/volatility/wiki/Memory-Samples | Legacy sample list (Win XP/7 era) |
+| **Magnet Forensics free tools** | https://www.magnetforensics.com/blog/free-tools/ | Free forensic resources and sample references |
+| **Magnet AXIOM free tier** | https://www.magnetforensics.com/products/magnet-axiom/ | Sample case references in product docs |
+| **SANS SIFT `/cases/`** | *(on VM)* | SRL-2018, FOR508 scenarios when course materials installed |
+| **FIND EVIL hackathon Egnyte** | *(requires auth)* | Set `GRAVEYARD_EGNYTE_URL` and run `bash scripts/download_sample.sh` |
+
+### Download helper
+
+```bash
+bash scripts/download_sample.sh /cases/graveyard/evidence
+# Or with custom URL:
+export GRAVEYARD_EGNYTE_URL='https://your-share/mem.raw'
+bash scripts/download_sample.sh
+```
+
+If download fails (auth required), the script prints manual steps.
 
 ## SRL-2018 / SIFT live memory paths
 
@@ -48,14 +76,12 @@ SRL-2018 (Security Response Lab) memory images are used in FOR508/FOR610 trainin
 
 | Path | Status | Notes |
 |------|--------|-------|
-| `/cases/` | **Check on your VM** | SIFT OVA may ship with sample cases under `/cases/` — list with `ls -la /cases/` |
+| `/cases/` | **Check on your VM** | SIFT OVA may ship with sample cases — `ls -la /cases/` |
 | `/cases/SRL-2018/` | Common training layout | Memory + disk artifacts when course materials installed |
 | `/cases/graveyard/evidence/` | **GRAVEYARD install target** | Created by `install.sh` — copy your `.raw` here |
 | `/home/sans/sans-sift/` | Alternate SIFT layout | Some OVAs use `$HOME` case directories |
 
 ### If `/cases/` is empty
-
-Download from SANS course materials or SANS Org Egnyte (requires SANS account / course enrollment):
 
 1. Log in to [SANS MySANS](https://www.sans.org/my-account/) or course Egnyte share
 2. Navigate to **FOR508** or **SRL-2018** → Memory images
@@ -83,23 +109,19 @@ export DISK_TIMELINE=/cases/graveyard/analysis/bodyfile_timeline.json
 bash scripts/run_live_triage.sh /cases/graveyard/evidence/mem.raw /cases/graveyard
 ```
 
-## Other recommended datasets
-
-| Dataset | Source | Notes |
-|---------|--------|-------|
-| SANS FOR508 memory samples | Course materials / SIFT `/cases/` | Win7/Win10 malware scenarios |
-| Magnet Forensics samples | [magnetforensics.com/blog/free-tools](https://www.magnetforensics.com/blog/free-tools/) | Various OS versions |
-| NIST CFReDS | [nist.gov CFReDS](https://www.nist.gov/itl/ssd/software-quality-group/computer-forensics-reference-data-sets-cfreds) | Disk-focused; pair with memory if available |
-
-## Capture procedure (manual)
+After live run, fill ground truth:
 
 ```bash
-IMAGE=/cases/graveyard/evidence/mem.raw
-vol.py -f "$IMAGE" windows.info 2>&1 | tee exports/windows_info_$(date +%Y%m%d_%H%M%S).txt
-vol.py -f "$IMAGE" windows.pslist 2>&1 | tee exports/pslist_$(date +%Y%m%d_%H%M%S).txt
-vol.py -f "$IMAGE" windows.psscan 2>&1 | tee exports/psscan_$(date +%Y%m%d_%H%M%S).txt
-python3 graveyard_correlate.py --exports ./exports/ --output analysis/graveyard_report.json
-vol.py -f "$IMAGE" windows.netscan 2>&1 | tee exports/netscan_$(date +%Y%m%d_%H%M%S).txt
+cp examples/ground_truth_live_template.json analysis/ground_truth_live.json
+# Edit PIDs from analysis/graveyard_engine_*.json
+```
+
+## Autonomous agent loop (deterministic self-correction)
+
+```bash
+bash scripts/agent_loop.sh examples/sample_exports
+# With timeline:
+bash scripts/agent_loop.sh examples/sample_exports examples/disk_timeline_sample.json
 ```
 
 ## Data handling

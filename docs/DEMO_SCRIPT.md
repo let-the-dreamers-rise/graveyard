@@ -1,30 +1,19 @@
 # GRAVEYARD Demo Video Script (~5 minutes)
 
-Record on SIFT live or locally with bundled sample exports. Terminal + Cursor side by side.
+Two paths: **offline sample** (Windows/SIFT) and **autonomous agent loop** (tiebreaker).
 
 ---
 
-## [0:00–0:25] Hook — "The Graveyard Problem"
+## Path A — Offline sample (0:00–3:30)
 
-**Screen:** Title slide or README
-
-**Narration (word-for-word):**
-> "Memory forensics agents find evil — but they also hallucinate it. GRAVEYARD hunts ghost artifacts: processes that exist in memory pool scans but not in active process lists, and network sockets with no live process. When the AI overclaims, our verifier forces autonomous self-correction — with measured precision and recall for the judges."
-
-**Action:** Show README tagline and `docs/ARCHITECTURE.md` diagram.
-
----
-
-## [0:25–1:00] Measured accuracy — benchmark
-
-**Screen:** Terminal
+### [0:00–0:20] Hook
 
 **Narration:**
-> "Before the demo, here are real numbers. Our benchmark script scores correlate output and findings against ground truth JSON."
+> "Memory forensics agents find evil — and hallucinate it. GRAVEYARD hunts ghost artifacts with a deterministic engine, architectural verifier, and measured accuracy. When the AI overclaims, our agent loop self-corrects without a human — and without another LLM call."
 
-**Commands:**
+### [0:20–0:50] Benchmark
+
 ```bash
-cd graveyard
 python3 scripts/benchmark_accuracy.py \
   --exports examples/sample_exports \
   --ground-truth examples/ground_truth_srl2018_sample.json \
@@ -32,113 +21,93 @@ python3 scripts/benchmark_accuracy.py \
   --output analysis/benchmark_metrics.json
 ```
 
-**Highlight:** `"ghost_recall": 1.0`, `"hallucination_catch_rate": 1.0` in output.
+**Highlight:** ghost_recall 1.0, combined_f1 1.0, hallucination_catch_rate 1.0
 
-**Narration:**
-> "One hundred percent ghost recall, one hundred percent hallucination catch rate on the sample case. Judges can reproduce this in ten seconds."
+### [0:50–1:30] Unified engine
 
----
-
-## [1:00–1:45] Sample case — ghost PID 5678
-
-**Screen:** Terminal
-
-**Narration:**
-> "Our bundled case mirrors SRL-2018 ghost patterns. PID 5678 is PowerShell in psscan but absent from pslist."
-
-**Commands:**
 ```bash
-grep 5678 examples/sample_exports/psscan_20240315.txt
-grep 5678 examples/sample_exports/pslist_20240315.txt || echo "NOT in pslist — ghost!"
-python3 graveyard_correlate.py --exports examples/sample_exports
+python3 graveyard_engine.py --exports examples/sample_exports
 ```
 
-**Highlight:** `"ghost_count": 1`, orphan socket to 198.51.100.42:4444.
+**Highlight:** PID 5678 severity_score 90, priority critical (ghost + orphan)
 
----
+### [1:30–2:00] Timeline + contradictions
 
-## [1:45–2:15] Multi-artifact timeline parity
-
-**Screen:** Terminal
-
-**Narration:**
-> "GRAVEYARD also cross-checks memory ghosts against disk timeline exports — lightweight multi-source correlation."
-
-**Commands:**
 ```bash
-python3 graveyard_timeline.py \
+python3 graveyard_engine.py \
   --exports examples/sample_exports \
-  --timeline examples/disk_timeline_sample.json
+  --timeline examples/disk_timeline_sample.json \
+  --output analysis/graveyard_engine_report.json
 ```
 
-**Highlight:** `"parity_matches": 1` — powershell.exe on disk and in memory ghost.
+### [2:00–2:45] Verifier REJECT
 
----
-
-## [2:15–3:15] Self-correction — verifier REJECT
-
-**Screen:** Terminal
-
-**Narration:**
-> "The agent drafts findings. Version one overclaims — it calls cmd.exe a malicious C2 beacon in the observation field. The verifier rejects it. The agent must self-correct. No arguing with the verifier."
-
-**Commands:**
 ```bash
 python3 verify_findings.py examples/findings_draft_v1_reject.json \
   --exports examples/sample_exports --json-out
-echo "Exit code: $?"
 ```
 
-**Highlight:** ATTRIBUTION_GUARD, CONFIDENCE_GUARD. Pause 3 seconds.
+**Highlight:** ATTRIBUTION_GUARD — pause 3 seconds
 
----
+### [2:45–3:30] Verifier PASS
 
-## [3:15–4:15] Self-correction — verifier PASS + audit trail
-
-**Screen:** Terminal
-
-**Narration:**
-> "Version two moves attribution to interpretation, cites exact export substrings, and uses inferred confidence. Report only generates after verification passes."
-
-**Commands:**
 ```bash
 python3 verify_findings.py examples/findings_draft_v2_pass.json \
   --exports examples/sample_exports --report reports/report.md
-python3 scripts/generate_audit_log.py --exports examples/sample_exports
-head -5 docs/execution_logs/execution_log.jsonl
 ```
-
-**Highlight:** PASSED, sha256 hashes in audit log.
 
 ---
 
-## [4:15–4:45] SIFT live triage (optional — record on VM)
-
-**Screen:** SIFT terminal
+## Path B — Autonomous agent loop (3:30–4:30) ⭐ tiebreaker
 
 **Narration:**
-> "On SANS SIFT, one script runs the full pipeline: Volatility, correlate, netscan, malfind, audit log, and findings template."
+> "This is deterministic self-correction — not prompt engineering. The loop injects a bad finding, verifier rejects, engine rebuilds facts-only findings, verifier passes."
 
-**Commands:**
 ```bash
+bash scripts/agent_loop.sh examples/sample_exports
+```
+
+**Highlight:**
+- `v1 exit code: 1`
+- `auto_correct_findings (engine facts only, no LLM)`
+- `RESULT: PASS — deterministic self-correction demonstrated`
+
+Optional Windows (Git Bash):
+```powershell
+bash scripts/agent_loop.sh examples/sample_exports
+```
+
+---
+
+## Path C — SIFT live (4:30–5:00, optional)
+
+```bash
+bash scripts/download_sample.sh
 bash scripts/run_live_triage.sh /cases/graveyard/evidence/mem.raw /cases/graveyard
 ```
 
-**Narration:**
-> "Copy your SRL-2018 or FOR508 memory image to evidence first. See docs/DATASETS.md for paths."
+Fill `examples/ground_truth_live_template.json` → `analysis/ground_truth_live.json`
 
 ---
 
-## [4:45–5:00] Close
+## Spoliation + MCP (B-roll)
 
-**Narration (word-for-word):**
-> "GRAVEYARD wins on the tiebreaker: autonomous self-correction with a full audit trail, measured accuracy metrics, and deterministic ghost detection — not just prompt engineering. Three MCP tools, seven spoliation tests, one-command demo. GitHub link in description. Built for FIND EVIL on Protocol SIFT."
+```bash
+bash scripts/spoliation_test.sh
+python3 mcp_graveyard_server.py   # show 8 tools in mcp/README.md
+```
+
+---
+
+## Close
+
+> "GRAVEYARD: 8 MCP tools, 17 spoliation tests, measured F1, and an agent loop that proves autonomous self-correction. GitHub in description."
 
 **End card:** https://github.com/let-the-dreamers-rise/graveyard
 
 ---
 
-## Windows offline recording
+## Windows one-liner
 
 ```powershell
 .\run_demo.ps1
@@ -148,7 +117,6 @@ python tests\test_spoliation.py
 
 ## Recording tips
 
-- 1080p, terminal font 14+
-- Pause on REJECT output 3 seconds
-- Show benchmark JSON metrics — judges love numbers
-- Keep under 5:00 — cut SIFT live section if running long
+- Show `agent_loop.sh` PASS banner — judges care about tiebreaker
+- Show benchmark JSON numbers, not slides
+- Keep under 5:00 — cut SIFT live if long

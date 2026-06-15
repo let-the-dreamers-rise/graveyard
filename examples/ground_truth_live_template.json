@@ -1,0 +1,61 @@
+{
+  "case_id": "LIVE_CASE_FILL_ME",
+  "description": "Ground truth template for live SIFT triage. After run_live_triage.sh, copy PIDs from analysis/graveyard_engine_*.json into this file.",
+  "captured_at": "FILL_ISO8601",
+  "memory_image": "/cases/graveyard/evidence/mem.raw",
+  "exports_dir": "/cases/graveyard/exports",
+  "instructions": [
+    "1. Run: bash scripts/run_live_triage.sh /cases/graveyard/evidence/mem.raw /cases/graveyard",
+    "2. Open analysis/graveyard_engine_<timestamp>.json",
+    "3. Copy ghost PIDs into expected_correlate.ghost_processes",
+    "4. Copy orphan socket rows into expected_correlate.orphan_sockets",
+    "5. Save as analysis/ground_truth_live.json",
+    "6. Benchmark: python3 scripts/benchmark_accuracy.py --exports ./exports --ground-truth analysis/ground_truth_live.json"
+  ],
+  "expected_correlate": {
+    "ghost_processes": [
+      {
+        "pid": 0,
+        "image": "FILL_PROCESS_NAME.exe",
+        "ppid": 0,
+        "notes": "Replace pid/image from engine ranked_artifacts or ghosts array"
+      }
+    ],
+    "orphan_sockets": [
+      {
+        "pid": 0,
+        "foreign_address": "0.0.0.0",
+        "foreign_port": "0",
+        "state": "ESTABLISHED",
+        "notes": "Replace from orphan_sockets in engine report"
+      }
+    ],
+    "not_orphan": [
+      {
+        "pid": 0,
+        "foreign_address": "0.0.0.0",
+        "foreign_port": "0",
+        "reason": "PID in pslist — not an orphan"
+      }
+    ]
+  },
+  "expected_findings": [
+    {
+      "artifact_type": "ghost_process",
+      "pid": 0,
+      "required_observation_tokens": ["FILL_PID", "psscan", "pslist"]
+    },
+    {
+      "artifact_type": "orphan_socket",
+      "pid": 0,
+      "required_observation_tokens": ["FILL_PID", "FILL_IP", "FILL_PORT"]
+    }
+  ],
+  "hallucination_tests": [],
+  "baseline_protocol_sift": {
+    "ghost_recall": 0.65,
+    "orphan_recall": 0.50,
+    "attribution_control": "prompt_only",
+    "self_correction_gate": false
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "generated_at": "2026-06-15T23:54:40.274202+00:00",
+  "case_id": "sample_exports_srl2018_demo",
+  "graveyard": {
+    "ghost_recall": 1.0,
+    "orphan_recall": 1.0,
+    "ghost_f1": 1.0,
+    "orphan_f1": 1.0,
+    "combined_f1": 1.0,
+    "ghost_false_positive_rate": 0.0,
+    "orphan_false_positive_rate": 0.0,
+    "hallucination_catch_rate": 1.0,
+    "self_correction_gate": true,
+    "attribution_control": "architectural_verifier"
+  },
+  "baseline_protocol_sift": {
+    "label": "Protocol SIFT prompt-only baseline (simulated from ground truth)",
+    "ghost_recall": 0.65,
+    "orphan_recall": 0.5,
+    "attribution_control": "prompt_only",
+    "self_correction_gate": false,
+    "simulated_ghosts_detected": 0,
+    "simulated_ghosts_missed": 1,
+    "simulated_orphans_detected": 0,
+    "simulated_orphans_missed": 1,
+    "simulated_overclaim_rate": 0.35,
+    "hallucination_catch_rate": 0.0,
+    "note": "Baseline has no architectural verifier \u2014 attribution overclaims ship unchecked. GRAVEYARD verifier catches injected hallucination tests at measured rate."
+  },
+  "delta": {
+    "ghost_recall": 0.35,
+    "orphan_recall": 0.5,
+    "combined_f1_advantage": 0.425,
+    "hallucination_catch_advantage": 1.0
+  },
+  "winner_on_metric": {
+    "ghost_recall": "graveyard",
+    "orphan_recall": "graveyard",
+    "hallucination_control": "graveyard",
+    "self_correction": "graveyard"
+  }
+}

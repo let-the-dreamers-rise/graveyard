@@ -22,6 +22,7 @@ sudo chown -R "$(whoami):$(whoami)" "$CASE_ROOT" 2>/dev/null || true
 
 # 3. Copy GRAVEYARD tooling
 cp "$REPO_DIR/graveyard_correlate.py" "$CASE_ROOT/"
+cp "$REPO_DIR/graveyard_engine.py" "$CASE_ROOT/" 2>/dev/null || true
 cp "$REPO_DIR/graveyard_timeline.py" "$CASE_ROOT/" 2>/dev/null || true
 cp "$REPO_DIR/verify_findings.py" "$CASE_ROOT/"
 cp "$REPO_DIR/spoliation_guard.py" "$CASE_ROOT/" 2>/dev/null || true

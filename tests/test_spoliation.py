@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""GRAVEYARD spoliation test suite — architectural + documented controls."""
+"""GRAVEYARD spoliation test suite — 13+ architectural + documented controls."""
 
 from __future__ import annotations
 
@@ -20,9 +20,12 @@ from spoliation_guard import (  # noqa: E402
     export_dir_writable,
     is_evidence_path,
     is_allowed_write_path,
+    is_export_path_traversal,
     parse_reject_codes,
+    spoliation_check,
+    validate_export_read,
 )
-from verify_findings import verify_findings  # noqa: E402
+from verify_findings import read_export, verify_findings  # noqa: E402
 
 
 class TestEvidencePathBlocking(unittest.TestCase):
@@ -42,6 +45,20 @@ class TestEvidencePathBlocking(unittest.TestCase):
         allowed, reason = check_path_write_policy("/tmp/evil_write.txt")
         self.assertFalse(allowed)
         self.assertIn("WRITE_OUTSIDE_ALLOWED_ROOTS", reason)
+
+
+class TestExportPathTraversal(unittest.TestCase):
+    def test_parent_traversal_rejected(self):
+        self.assertTrue(is_export_path_traversal("../../../etc/passwd"))
+
+    def test_valid_export_filename_allowed(self):
+        allowed, reason = validate_export_read("psscan_20240315.txt")
+        self.assertTrue(allowed)
+
+    def test_traversal_in_validate_export_read(self):
+        allowed, reason = validate_export_read("../../secrets.txt")
+        self.assertFalse(allowed)
+        self.assertIn("EXPORT_PATH_TRAVERSAL", reason)
 
 
 class TestAllowedWriteRoots(unittest.TestCase):
@@ -108,12 +125,71 @@ class TestVerifierHallucinationGuard(unittest.TestCase):
         codes = parse_reject_codes(errors)
         self.assertIn("ATTRIBUTION_GUARD", codes)
 
+    def test_confirmed_without_corroboration_rejected(self):
+        finding = {
+            "id": "F997",
+            "observation": "PID 5678 (powershell.exe) appears in psscan output but is absent from pslist.",
+            "interpretation": "Ghost process confirmed",
+            "confidence": "confirmed",
+            "citations": [
+                {
+                    "export_file": "psscan_20240315.txt",
+                    "matched_text": "5678\t1234\tpowershell.exe",
+                }
+            ],
+            "tool_provenance": {"command": "test", "timestamp": "2024-03-15T10:00:00Z"},
+        }
+        _, errors = verify_findings([finding], self.exports)
+        codes = parse_reject_codes(errors)
+        self.assertIn("CONFIDENCE_GUARD", codes)
+
+    def test_fake_citation_rejected(self):
+        finding = {
+            "id": "F996",
+            "observation": "PID 5678 (powershell.exe) appears in psscan output but is absent from pslist.",
+            "interpretation": "Ghost",
+            "confidence": "inferred",
+            "citations": [
+                {
+                    "export_file": "psscan_20240315.txt",
+                    "matched_text": "5678\t9999\tfake_process.exe",
+                }
+            ],
+            "tool_provenance": {"command": "test", "timestamp": "2024-03-15T10:00:00Z"},
+        }
+        _, errors = verify_findings([finding], self.exports)
+        codes = parse_reject_codes(errors)
+        self.assertIn("CITATION_MISMATCH", codes)
+
+
+class TestVerifierExportPathProtection(unittest.TestCase):
+    def test_traversal_export_read_blocked(self):
+        exports = REPO_ROOT / "examples" / "sample_exports"
+        with self.assertRaises(FileNotFoundError) as ctx:
+            read_export(exports, "../../../etc/passwd")
+        self.assertIn("EXPORT_PATH_TRAVERSAL", str(ctx.exception))
+
+
+class TestSpoliationCheckMCP(unittest.TestCase):
+    def test_evidence_write_blocked(self):
+        result = spoliation_check("/cases/graveyard/evidence/mem.raw", "write")
+        self.assertFalse(result["allowed"])
+        self.assertTrue(result["is_evidence_path"])
+
+    def test_exports_write_allowed(self):
+        result = spoliation_check("exports/pslist.txt", "write")
+        self.assertTrue(result["allowed"])
+
 
 class TestLiveTriageScriptDocumentation(unittest.TestCase):
     def test_run_live_triage_documents_evidence_patterns(self):
         script = (REPO_ROOT / "scripts" / "run_live_triage.sh").read_text(encoding="utf-8")
         self.assertTrue(evidence_path_patterns_in_script(script))
         self.assertIn("EVIDENCE_PATTERNS", script)
+
+    def test_run_live_triage_vol_autodetect(self):
+        script = (REPO_ROOT / "scripts" / "run_live_triage.sh").read_text(encoding="utf-8")
+        self.assertIn("find_vol", script)
 
 
 class TestGroundTruthHallucinationSuite(unittest.TestCase):
@@ -127,6 +203,31 @@ class TestGroundTruthHallucinationSuite(unittest.TestCase):
             if errors:
                 caught += 1
         self.assertEqual(caught, len(gt.get("hallucination_tests", [])))
+
+
+class TestVerifierDoesNotModifyExports(unittest.TestCase):
+    def test_verify_leaves_exports_unchanged(self):
+        exports = REPO_ROOT / "examples" / "sample_exports"
+        before = {
+            p.name: p.stat().st_mtime_ns
+            for p in exports.glob("*.txt")
+        }
+        finding = {
+            "id": "F001",
+            "observation": "PID 5678 (powershell.exe) appears in psscan output but is absent from pslist.",
+            "interpretation": "Ghost",
+            "confidence": "inferred",
+            "citations": [
+                {"export_file": "psscan_20240315.txt", "matched_text": "5678\t1234\tpowershell.exe"}
+            ],
+            "tool_provenance": {"command": "test", "timestamp": "2024-03-15T10:00:00Z"},
+        }
+        verify_findings([finding], exports)
+        after = {
+            p.name: p.stat().st_mtime_ns
+            for p in exports.glob("*.txt")
+        }
+        self.assertEqual(before, after)
 
 
 if __name__ == "__main__":
