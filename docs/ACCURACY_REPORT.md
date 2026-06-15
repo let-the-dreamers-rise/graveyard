@@ -1,6 +1,6 @@
 # GRAVEYARD Accuracy Report
 
-Evaluation against bundled sample case (`examples/sample_exports/`) and verifier self-correction demo.
+Evaluation against bundled sample case (`examples/sample_exports/`) and verifier self-correction demo. Regenerated **2026-06-16** for FIND EVIL submission.
 
 ## Ground truth (sample case)
 
@@ -54,20 +54,34 @@ Corrected in v2:
 
 Attribution moved to interpretation with `inferred` confidence.
 
-## Spoliation test
+## Spoliation & constraint bypass (honest assessment)
 
-The verifier reads exports as read-only. Attempting to cite a PID not present in any export triggers **PHANTOM_ARTIFACT**. The agent cannot fabricate evidence without a matching export substring — exports directory is the sole source of truth.
+| Control | Mechanism | Bypass if agent ignores? |
+|---------|-----------|--------------------------|
+| Evidence image writes | **Prompt-only** (`AGENTS.md`, Cursor rules) | Yes — agent could run `rm`/`mv` on evidence if shell is unrestricted |
+| Export tee discipline | **Prompt-only** | Yes — agent could skip teeing or edit exports |
+| Finding citations | **Architectural** (`verify_findings.py`) | No — CITATION_MISMATCH / PHANTOM_ARTIFACT reject fabricated substrings |
+| Attribution in observations | **Architectural** | No — ATTRIBUTION_GUARD blocks 14 intent terms in observation field |
+| Report generation | **Architectural** | No — exit code 1 blocks `reports/report.md` |
+| MCP tool surface | **Architectural** (`mcp_graveyard_server.py`) | No shell exposed — only correlate + verify on existing paths |
 
-Test: Adding `"PID 9999 (evil.exe) in psscan"` to an observation without export backing → REJECT.
+**Spoliation test (verifier layer):** Adding `"PID 9999 (evil.exe) in psscan"` without export backing → **PHANTOM_ARTIFACT** REJECT. The verifier reads exports as read-only; it cannot prevent deletion of the original memory image — that requires OS-level read-only mounts or an allowlist kernel (as in heavier submissions). We document this gap rather than claim full spoliation prevention.
+
+**Failure mode when model ignores prompt:** Agent could modify `exports/` text files; verifier would then accept citations against tampered exports. Mitigation for production: mount evidence read-only at OS level; treat `exports/` as append-only with hashes at capture time.
 
 ## Baseline comparison
 
-| Approach | Ghost detection | Attribution control | Self-correction | Audit trail |
-|----------|----------------|--------------------|--------------------|-------------|
-| Raw Volatility manual | Analyst diff | Manual | Manual | Analyst notes |
-| LLM-only triage | Unreliable | None | None | Chat history |
-| Protocol SIFT alone | Agent judgment | Prompt-only | Optional | Partial |
-| **GRAVEYARD** | Deterministic correlate | Architectural verifier | Mandatory loop | JSONL logs |
+| Approach | Ghost detection | Ghost-first sequencing | Attribution control | Self-correction gate | Audit trail |
+|----------|----------------|------------------------|--------------------|-----------------------|-------------|
+| Raw Volatility manual | Analyst diff | Manual | Manual | Manual | Analyst notes |
+| LLM-only triage | Unreliable | None | None | None | Chat history |
+| Protocol SIFT baseline | Agent judgment | No — blanket netscan | Prompt-only | Optional | Partial |
+| EvidenceChain ghost rule | Contradiction detector (1 of 7) | Part of multi-pass review | Architectural (MCP + phantom) | 4-pass engine | Signed receipts |
+| **GRAVEYARD** | Deterministic correlate | **Yes — netscan only on flagged PIDs** | Architectural verifier | **Mandatory exit-code loop** | JSONL logs |
+
+### Differentiation vs EvidenceChain ghost detector
+
+EvidenceChain catches ghosts as one contradiction type among seven across disk+memory+timeline. GRAVEYARD **leads with ghosts**: `graveyard_correlate.py` runs immediately after psscan/pslist (before netscan), focuses agent attention on flagged PIDs only, and pairs detection with an **exit-code verifier** the agent cannot argue with. Tradeoff: GRAVEYARD is memory-narrower but ~300 lines, reproducible offline in 30 seconds via `run_demo.ps1`.
 
 ## Metrics summary
 
@@ -84,4 +98,5 @@ Test: Adding `"PID 9999 (evil.exe) in psscan"` to an observation without export 
 - Correlator matches on PID only; does not detect DKOM or name spoofing
 - Requires correctly formatted Volatility 3 tabular exports
 - malfind hollow detection depends on agent following AGENTS.md step 7
-- Single sample case — live SIFT validation recommended for production claims
+- Single synthetic sample case — live SIFT validation recommended before production claims
+- Evidence-image spoliation prevention is prompt-only; verifier layer is architectural

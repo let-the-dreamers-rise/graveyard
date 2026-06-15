@@ -23,6 +23,9 @@ sudo chown -R "$(whoami):$(whoami)" "$CASE_ROOT" 2>/dev/null || true
 # 3. Copy GRAVEYARD tooling
 cp "$REPO_DIR/graveyard_correlate.py" "$CASE_ROOT/"
 cp "$REPO_DIR/verify_findings.py" "$CASE_ROOT/"
+cp "$REPO_DIR/mcp_graveyard_server.py" "$CASE_ROOT/" 2>/dev/null || true
+cp "$REPO_DIR/run_demo.sh" "$CASE_ROOT/" 2>/dev/null || true
+cp "$REPO_DIR/requirements.txt" "$CASE_ROOT/" 2>/dev/null || true
 cp "$REPO_DIR/schema/finding.schema.json" "$CASE_ROOT/"
 cp -r "$REPO_DIR/examples/sample_exports"/* "$CASE_ROOT/exports/" 2>/dev/null || mkdir -p "$CASE_ROOT/exports"
 
@@ -47,9 +50,9 @@ Case directory: $CASE_ROOT
   reports/   — verified reports only
 
 Quick test (offline with sample data):
-  cd $CASE_ROOT
-  python3 graveyard_correlate.py --exports ./exports
-  python3 verify_findings.py $REPO_DIR/examples/findings_draft_v2_pass.json --exports ./exports --report ./reports/report.md
+  cd $REPO_DIR
+  pip install -r requirements.txt 2>/dev/null || true
+  bash run_demo.sh
 
 Memory triage workflow:
   1. Open case in Cursor with AGENTS.md

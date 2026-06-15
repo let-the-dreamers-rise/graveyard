@@ -15,6 +15,7 @@ flowchart TB
         VOL["Volatility 3 plugins<br/>info, pslist, psscan, netscan, malfind"]
         GC["graveyard_correlate.py<br/>ghost + orphan detection"]
         VF["verify_findings.py<br/>citation + attribution guard"]
+        MCP["mcp_graveyard_server.py<br/>Pattern #2 lite — 2 typed MCP tools"]
     end
 
     subgraph agent["AI Agent (Protocol SIFT)"]
@@ -51,6 +52,8 @@ flowchart TB
 | `verify_findings.py` | **Architectural guardrail** | Schema, citation substring match, attribution guard, phantom artifact check |
 | `schema/finding.schema.json` | **Architectural guardrail** | Structured finding contract |
 | Protocol SIFT | Agent framework | Volatility command orchestration on SIFT |
+| `mcp_graveyard_server.py` | **Architectural guardrail (MCP)** | Stdio MCP: `graveyard_correlate`, `verify_findings` — read-only, no shell |
+| `run_demo.ps1` / `run_demo.sh` | Demo harness | One-command correlate → v1 REJECT → v2 PASS → report |
 
 ## Prompt vs architectural guardrails
 
@@ -99,9 +102,23 @@ sequenceDiagram
 4. Verifier validates against exports → report or rejection
 5. All steps logged to `docs/execution_logs/*.jsonl`
 
+## Pattern #2 lite — MCP integration
+
+GRAVEYARD implements FIND EVIL **Custom MCP Server** pattern in minimal form: two typed tools, stdio transport, zero shell access.
+
+| MCP tool | Input | Output | Side effects |
+|----------|-------|--------|--------------|
+| `graveyard_correlate` | `exports_dir` (path) | Ghost/orphan JSON | None (read-only) |
+| `verify_findings` | `findings_path`, `exports_dir` | `{passed, errors[]}` | None (read-only) |
+
+Start server: `python mcp_graveyard_server.py` (stdio). Add to Claude Desktop or Protocol SIFT MCP config with repo path as `cwd`.
+
+Security boundary: the MCP server cannot invoke Volatility or modify evidence — it only reads existing export files and findings JSON. Volatility orchestration remains in the Protocol SIFT agent layer.
+
 ## Design decisions
 
 - **Ghost-first netscan**: Only investigate network on PIDs flagged by correlate — reduces noise and token waste
 - **Substring citations**: Simple, auditable, no fuzzy matching — judges can grep exports
-- **Exit code contract**: Agent loop uses shell exit codes; no custom API needed
-- **Offline demo**: Sample exports let judges verify without a SIFT VM
+- **Exit code contract**: Agent loop uses shell exit codes; MCP returns structured pass/fail JSON
+- **Pattern #2 lite**: Two MCP tools instead of 20+ — plugs into existing Protocol SIFT agents without platform rebuild
+- **Offline demo**: `run_demo.ps1` / `run_demo.sh` with pauses for video recording; sample exports for judges without SIFT VM

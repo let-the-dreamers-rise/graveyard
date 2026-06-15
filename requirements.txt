@@ -1,0 +1,3 @@
+# GRAVEYARD — minimal runtime deps
+# Python 3.10+ required (stdlib only for correlate + verifier)
+mcp>=1.0.0
