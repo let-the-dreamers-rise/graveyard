@@ -1,0 +1,30 @@
+{
+  "generated_at": "2026-06-15T23:45:49.159103+00:00",
+  "exports_dir": "C:\\Users\\ASHWIN GOYAL\\OneDrive\\Desktop\\find e\\examples\\sample_exports",
+  "timeline_file": "disk_timeline_sample.json",
+  "timeline_entry_count": 3,
+  "disk_process_count": 3,
+  "memory_ghost_count": 1,
+  "parity_matches": 1,
+  "parity_gaps": 0,
+  "ghost_timeline_parity": [
+    {
+      "type": "ghost_timeline_parity",
+      "pid": 5678,
+      "memory_image": "powershell.exe",
+      "disk_process_match": true,
+      "status": "parity",
+      "interpretation_hint": "Ghost process name also appears on disk timeline \u2014 corroboration candidate"
+    }
+  ],
+  "disk_only_processes": [
+    "cmd.exe",
+    "winlogon.exe"
+  ],
+  "memory_report_summary": {
+    "pslist_count": 5,
+    "psscan_count": 5,
+    "ghost_count": 1,
+    "orphan_socket_count": 1
+  }
+}

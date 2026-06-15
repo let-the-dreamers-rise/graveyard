@@ -1,0 +1,101 @@
+{
+  "generated_at": "2026-06-15T23:46:05.315681+00:00",
+  "case_id": "sample_exports_srl2018_demo",
+  "exports_dir": "C:\\Users\\ASHWIN GOYAL\\OneDrive\\Desktop\\find e\\examples\\sample_exports",
+  "ground_truth_file": "ground_truth_srl2018_sample.json",
+  "correlate": {
+    "ghost_process": {
+      "true_positives": 1,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "orphan_socket": {
+      "true_positives": 1,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0
+    },
+    "expected_ghost_count": 1,
+    "detected_ghost_count": 1,
+    "expected_orphan_count": 1,
+    "detected_orphan_count": 1
+  },
+  "hallucination_guard": {
+    "hallucination_tests": 2,
+    "hallucinations_caught": 2,
+    "hallucination_catch_rate": 1.0,
+    "details": [
+      {
+        "id": "H001",
+        "description": "Attribution in observation \u2014 must REJECT",
+        "rejected": true,
+        "error_count": 2,
+        "expected_codes_matched": [
+          "ATTRIBUTION_GUARD",
+          "CONFIDENCE_GUARD"
+        ],
+        "errors": [
+          "F999: ATTRIBUTION_GUARD \u2014 observation contains 'attacker'; move intent/attribution to interpretation with lower confidence",
+          "F999: CONFIDENCE_GUARD \u2014 'confirmed' requires 2+ citations from independent tool exports"
+        ]
+      },
+      {
+        "id": "H002",
+        "description": "Phantom PID not in exports \u2014 must REJECT",
+        "rejected": true,
+        "error_count": 2,
+        "expected_codes_matched": [
+          "PHANTOM_ARTIFACT",
+          "CITATION_MISMATCH"
+        ],
+        "errors": [
+          "F998: CITATION_MISMATCH \u2014 matched_text not in psscan_20240315.txt: '9999\t1234\tevil.exe'",
+          "F998: PHANTOM_ARTIFACT \u2014 PID '9999' in observation but not found in any export file"
+        ]
+      }
+    ]
+  },
+  "findings": {
+    "expected_finding_count": 3,
+    "matched_finding_count": 3,
+    "finding_recall": 1.0,
+    "details": [
+      {
+        "artifact_type": "ghost_process",
+        "pid": 5678,
+        "matched_in_findings": true
+      },
+      {
+        "artifact_type": "orphan_socket",
+        "pid": 5678,
+        "matched_in_findings": true
+      },
+      {
+        "artifact_type": "network_connection",
+        "pid": 1234,
+        "matched_in_findings": true
+      }
+    ]
+  },
+  "baseline_comparison": {
+    "protocol_sift_estimated_ghost_recall": 0.65,
+    "protocol_sift_estimated_orphan_recall": 0.5,
+    "graveyard_ghost_recall": 1.0,
+    "graveyard_orphan_recall": 1.0,
+    "ghost_recall_delta": 0.35,
+    "orphan_recall_delta": 0.5
+  },
+  "summary": {
+    "ghost_recall": 1.0,
+    "orphan_recall": 1.0,
+    "ghost_precision": 1.0,
+    "orphan_precision": 1.0,
+    "hallucination_catch_rate": 1.0,
+    "finding_recall": 1.0
+  }
+}

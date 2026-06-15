@@ -61,36 +61,10 @@ bash install.sh
 
 ```bash
 cd /cases/graveyard
-IMAGE=/cases/graveyard/evidence/mem.raw
-
-# 1. Evidence inventory
-file "$IMAGE" | tee exports/evidence_inventory.txt
-sha256sum "$IMAGE" | tee -a exports/evidence_inventory.txt
-
-# 2. Profile
-vol.py -f "$IMAGE" windows.info 2>&1 | tee exports/windows_info_$(date +%Y%m%d_%H%M%S).txt
-
-# 3. Process baseline
-vol.py -f "$IMAGE" windows.pslist 2>&1 | tee exports/pslist_$(date +%Y%m%d_%H%M%S).txt
-
-# 4. Hidden process scan
-vol.py -f "$IMAGE" windows.psscan 2>&1 | tee exports/psscan_$(date +%Y%m%d_%H%M%S).txt
-
-# 5. Ghost correlation
-python3 graveyard_correlate.py --exports ./exports/ --output analysis/graveyard_report.json 2>&1 | tee docs/execution_logs/graveyard_correlate.jsonl
-
-# 6. Network (after reviewing ghosts)
-vol.py -f "$IMAGE" windows.netscan 2>&1 | tee exports/netscan_$(date +%Y%m%d_%H%M%S).txt
-
-# Re-run correlate if netscan was not present initially
-python3 graveyard_correlate.py --exports ./exports/ --output analysis/graveyard_report.json
-
-# 7. Hollow memory on ghost PIDs
-vol.py -f "$IMAGE" windows.malfind 2>&1 | tee exports/malfind_$(date +%Y%m%d_%H%M%S).txt
-
-# 8. Draft + verify findings
-python3 verify_findings.py findings_draft.json --exports ./exports --report ./reports/report.md
+bash /path/to/graveyard/scripts/run_live_triage.sh /cases/graveyard/evidence/mem.raw /cases/graveyard
 ```
+
+Or use the manual steps in the "Live triage workflow" section above.
 
 ## Cursor agent setup
 

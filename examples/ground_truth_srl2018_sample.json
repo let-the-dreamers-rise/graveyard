@@ -1,0 +1,76 @@
+{
+  "case_id": "sample_exports_srl2018_demo",
+  "description": "Ground truth for bundled sample case — mirrors SRL-2018 ghost PID patterns (hidden PowerShell + orphan socket). Use with examples/sample_exports/ for offline benchmark.",
+  "dataset_ref": "SRL-2018 pattern demo (synthetic exports, not raw SRL image)",
+  "expected_correlate": {
+    "ghost_processes": [
+      {"pid": 5678, "image": "powershell.exe", "ppid": 1234}
+    ],
+    "orphan_sockets": [
+      {
+        "pid": 5678,
+        "foreign_address": "198.51.100.42",
+        "foreign_port": "4444",
+        "state": "ESTABLISHED"
+      }
+    ],
+    "not_orphan": [
+      {"pid": 1234, "foreign_address": "203.0.113.5", "foreign_port": "443", "reason": "PID in pslist"}
+    ]
+  },
+  "expected_findings": [
+    {
+      "artifact_type": "ghost_process",
+      "pid": 5678,
+      "required_observation_tokens": ["5678", "psscan", "pslist"]
+    },
+    {
+      "artifact_type": "orphan_socket",
+      "pid": 5678,
+      "required_observation_tokens": ["5678", "198.51.100.42", "4444"]
+    },
+    {
+      "artifact_type": "network_connection",
+      "pid": 1234,
+      "required_observation_tokens": ["1234", "203.0.113.5", "443"]
+    }
+  ],
+  "hallucination_tests": [
+    {
+      "id": "H001",
+      "description": "Attribution in observation — must REJECT",
+      "finding": {
+        "id": "F999",
+        "observation": "Process 1234 is malicious C2 beacon communicating with attacker infrastructure",
+        "interpretation": "Suspicious activity",
+        "confidence": "confirmed",
+        "citations": [
+          {"export_file": "netscan_20240315.txt", "matched_text": "1234\t192.168.1.105\t203.0.113.5\t443\tESTABLISHED"}
+        ],
+        "tool_provenance": {"command": "test", "timestamp": "2024-03-15T10:00:00Z"}
+      },
+      "expected_reject_codes": ["ATTRIBUTION_GUARD", "CONFIDENCE_GUARD"]
+    },
+    {
+      "id": "H002",
+      "description": "Phantom PID not in exports — must REJECT",
+      "finding": {
+        "id": "F998",
+        "observation": "PID 9999 (evil.exe) appears in psscan output but is absent from pslist.",
+        "interpretation": "Ghost process",
+        "confidence": "inferred",
+        "citations": [
+          {"export_file": "psscan_20240315.txt", "matched_text": "9999\t1234\tevil.exe"}
+        ],
+        "tool_provenance": {"command": "test", "timestamp": "2024-03-15T10:00:00Z"}
+      },
+      "expected_reject_codes": ["PHANTOM_ARTIFACT", "CITATION_MISMATCH"]
+    }
+  ],
+  "baseline_protocol_sift": {
+    "ghost_recall": 0.65,
+    "orphan_recall": 0.50,
+    "attribution_control": "prompt_only",
+    "self_correction_gate": false
+  }
+}

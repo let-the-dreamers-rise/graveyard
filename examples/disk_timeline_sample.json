@@ -1,0 +1,28 @@
+{
+  "case_id": "sample_exports_srl2018_demo",
+  "source": "stub_prefetch_bodyfile_export",
+  "description": "Lightweight disk timeline for multi-artifact parity demo. Process names should appear in memory ghosts.",
+  "entries": [
+    {
+      "timestamp": "2024-03-15T09:41:22Z",
+      "source": "prefetch",
+      "process": "cmd.exe",
+      "path": "C:\\Windows\\System32\\cmd.exe",
+      "notes": "Parent of ghost PowerShell"
+    },
+    {
+      "timestamp": "2024-03-15T09:41:45Z",
+      "source": "prefetch",
+      "process": "powershell.exe",
+      "path": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+      "notes": "Disk artifact for ghost PID 5678 — timeline parity expected"
+    },
+    {
+      "timestamp": "2024-03-15T09:30:00Z",
+      "source": "bodyfile",
+      "process": "winlogon.exe",
+      "path": "C:\\Windows\\System32\\winlogon.exe",
+      "notes": "Benign system process — not a ghost"
+    }
+  ]
+}

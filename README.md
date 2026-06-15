@@ -9,8 +9,10 @@ GRAVEYARD is a Protocol SIFT extension for the [FIND EVIL! hackathon](https://fi
 Memory forensics agents hallucinate attribution. GRAVEYARD stops that with two architectural guardrails:
 
 1. **`graveyard_correlate.py`** — deterministic ghost detection (no LLM guessing)
-2. **`verify_findings.py`** — citation verifier that REJECTs overclaims and triggers self-correction
-3. **`mcp_graveyard_server.py`** — Pattern #2 lite: two typed MCP tools, read-only, no shell
+2. **`graveyard_timeline.py`** — memory+disk timeline parity (multi-artifact lite)
+3. **`verify_findings.py`** — citation verifier that REJECTs overclaims and triggers self-correction
+4. **`scripts/benchmark_accuracy.py`** — measured precision/recall vs ground truth JSON
+5. **`mcp_graveyard_server.py`** — Pattern #2 lite: three typed MCP tools, read-only, no shell
 
 The tiebreaker metric is **autonomous self-correction**: the agent drafts findings, gets REJECTed, fixes them, and passes — all logged.
 
@@ -30,6 +32,11 @@ bash run_demo.sh
 
 Runs: correlate → v1 REJECT → v2 PASS → show report (pauses between steps for recording).
 
+**Benchmark metrics:**
+```powershell
+python scripts/benchmark_accuracy.py --exports examples/sample_exports --ground-truth examples/ground_truth_srl2018_sample.json --findings examples/findings_draft_v2_pass.json
+```
+
 ## Quick start (SIFT Workstation)
 
 ```bash
@@ -46,6 +53,14 @@ python verify_findings.py examples/findings_draft_v1_reject.json --exports examp
 python verify_findings.py examples/findings_draft_v2_pass.json --exports examples/sample_exports --report reports/report.md  # expect exit 0
 ```
 
+## Live SIFT triage (one command)
+
+```bash
+bash scripts/run_live_triage.sh /cases/graveyard/evidence/mem.raw /cases/graveyard
+```
+
+See `docs/DATASETS.md` for SRL-2018 paths and `docs/SIFT_SETUP.md` for VM setup.
+
 ## MCP server (Pattern #2 lite)
 
 ```bash
@@ -57,6 +72,7 @@ python mcp_graveyard_server.py   # stdio — add to Claude Desktop / Protocol SI
 |------|---------|
 | `graveyard_correlate(exports_dir)` | Ghost + orphan JSON from Volatility exports |
 | `verify_findings(findings_path, exports_dir)` | Pass/fail + rejection reasons |
+| `benchmark_accuracy(exports_dir, ground_truth_path, findings_path?)` | Precision/recall/F1 for judges |
 
 See `docs/ARCHITECTURE.md` for security boundaries.
 
@@ -77,8 +93,15 @@ Bundled `examples/sample_exports/` contains a ghost PID **5678** (`powershell.ex
 ```
 graveyard/
 ├── graveyard_correlate.py     # Core ghost correlator
+├── graveyard_timeline.py      # Memory+disk timeline parity
 ├── verify_findings.py         # Finding verifier (self-correction gate)
-├── mcp_graveyard_server.py    # MCP Pattern #2 lite (2 tools)
+├── spoliation_guard.py        # Evidence path policy helpers
+├── mcp_graveyard_server.py    # MCP Pattern #2 lite (3 tools)
+├── scripts/
+│   ├── run_live_triage.sh     # Full SIFT pipeline
+│   ├── benchmark_accuracy.py  # Measured metrics vs ground truth
+│   └── generate_audit_log.py  # sha256 JSONL audit trail
+├── tests/test_spoliation.py   # 7 spoliation/constraint tests
 ├── run_demo.ps1 / run_demo.sh # One-command video demo
 ├── install.sh                 # SIFT installer
 ├── requirements.txt           # mcp SDK
@@ -88,7 +111,8 @@ graveyard/
 │   ├── sample_exports/        # Demo Volatility output
 │   ├── graveyard_report.json  # Correlator output
 │   ├── findings_draft_v1_reject.json
-│   └── findings_draft_v2_pass.json
+│   ├── findings_draft_v2_pass.json
+│   └── ground_truth_srl2018_sample.json
 └── docs/                      # Hackathon deliverables
 ```
 

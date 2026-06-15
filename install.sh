@@ -22,8 +22,11 @@ sudo chown -R "$(whoami):$(whoami)" "$CASE_ROOT" 2>/dev/null || true
 
 # 3. Copy GRAVEYARD tooling
 cp "$REPO_DIR/graveyard_correlate.py" "$CASE_ROOT/"
+cp "$REPO_DIR/graveyard_timeline.py" "$CASE_ROOT/" 2>/dev/null || true
 cp "$REPO_DIR/verify_findings.py" "$CASE_ROOT/"
+cp "$REPO_DIR/spoliation_guard.py" "$CASE_ROOT/" 2>/dev/null || true
 cp "$REPO_DIR/mcp_graveyard_server.py" "$CASE_ROOT/" 2>/dev/null || true
+cp -r "$REPO_DIR/scripts" "$CASE_ROOT/" 2>/dev/null || true
 cp "$REPO_DIR/run_demo.sh" "$CASE_ROOT/" 2>/dev/null || true
 cp "$REPO_DIR/requirements.txt" "$CASE_ROOT/" 2>/dev/null || true
 cp "$REPO_DIR/schema/finding.schema.json" "$CASE_ROOT/"
@@ -56,9 +59,11 @@ Quick test (offline with sample data):
 
 Memory triage workflow:
   1. Open case in Cursor with AGENTS.md
-  2. Run Volatility plugins; tee all output to exports/
+  2. bash scripts/run_live_triage.sh /cases/graveyard/evidence/mem.raw /cases/graveyard
+     OR run Volatility plugins manually; tee all output to exports/
   3. Run graveyard_correlate.py — hunt ghosts before netscan deep-dive
   4. Draft findings JSON → verify_findings.py
-  5. On REJECT: fix and re-run (max 3 iterations)
+  5. python3 scripts/benchmark_accuracy.py --exports ./exports --ground-truth examples/ground_truth_srl2018_sample.json
+  6. On REJECT: fix and re-run (max 3 iterations)
 
 EOF
