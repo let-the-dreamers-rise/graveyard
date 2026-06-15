@@ -6,3 +6,15 @@ venv/
 *.egg-info/
 .DS_Store
 Thumbs.db
+
+# Local agent-loop / verifier run artifacts (do not commit)
+/findings_*.json
+/findings_draft_*.json
+/findings_corrected_*.json
+/analysis/graveyard_engine_*.json
+/analysis/test_*.json
+/reports/report_*.md
+/reports/test_report.md
+/docs/execution_logs/agent_loop_*.jsonl
+/docs/execution_logs/agent_loop_v*.txt
+/docs/execution_logs/test_verifier.jsonl

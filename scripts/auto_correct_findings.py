@@ -76,18 +76,37 @@ def build_findings_from_engine(report: dict) -> list[dict]:
         idx += 1
 
     for contra in report.get("contradictions", []):
+        pid = contra["pid"]
+        image = contra.get("memory_image", "unknown")
+        citations: list[dict[str, str]] = []
+        for ghost in report.get("ghosts", []):
+            if ghost.get("pid") == pid and ghost.get("citations"):
+                citations.append({
+                    "export_file": ghost["citations"][0]["export_file"],
+                    "matched_text": ghost["citations"][0]["matched_text"],
+                })
+                break
+        if not citations:
+            for src in ("pslist", "psscan"):
+                src_file = report.get("sources", {}).get(src)
+                if src_file:
+                    citations.append({
+                        "export_file": src_file,
+                        "matched_text": f"{pid}\t",
+                    })
+                    break
         findings.append({
             "id": f"F{idx:03d}",
             "observation": (
-                f"PID {contra['pid']} ({contra.get('memory_image', 'unknown')}) appears in "
-                "pslist as running but is marked deleted on disk timeline export."
+                f"PID {pid} ({image}) appears in pslist as running but is marked "
+                "deleted on disk timeline export."
             ),
             "interpretation": (
                 "Memory vs disk timeline contradiction — requires corroboration from "
                 "additional disk artifacts."
             ),
             "confidence": "inferred",
-            "citations": [],
+            "citations": citations,
             "tool_provenance": {
                 "command": "graveyard_engine.py; auto_correct_findings.py",
                 "timestamp": ts,
