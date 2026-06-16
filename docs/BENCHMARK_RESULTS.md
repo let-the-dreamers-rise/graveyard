@@ -53,17 +53,19 @@ The `baseline_protocol_sift` block in `examples/ground_truth_srl2018_sample.json
 - Simulated overclaim rate 0.35 (attribution ships unchecked)
 - Hallucination catch 0.0 (no verifier gate)
 
-GRAVEYARD does **not** claim live head-to-head runs against Council-SIFT or EvidenceChain. We compare against documented baseline estimates and ship reproducible JSON judges can re-run.
+GRAVEYARD compares against documented **prompt-only baseline** estimates in ground truth JSON — not live head-to-head runs against other submissions. Judges re-run one command and get reproducible JSON.
 
-## vs Council-SIFT / EvidenceChain (positioning, not measured head-to-head)
+## Architectural strengths (measured on sample case)
 
-| Capability | GRAVEYARD | Council-SIFT (typical) | EvidenceChain (typical) |
-|------------|-----------|------------------------|-------------------------|
-| Ghost + orphan correlate | Measured 1.0 recall | Ghost-focused | Full chain |
-| Architectural verifier | **Exit-code gate** | Prompt-only | Varies |
-| Hallucination catch | **100%** on injected tests | Unmeasured | Unmeasured |
-| Autonomous self-correction | **`agent_loop.sh`** (no LLM) | Council retry | Varies |
-| Reproducible benchmark JSON | **Yes** | Rare | Rare |
+| Capability | GRAVEYARD | Prompt-only baseline (est.) |
+|------------|-----------|-------------------------------|
+| Ghost + orphan correlate | Measured 1.0 recall | Ghost recall 0.65; orphan 0.50 |
+| Ghost-first sequencing | **Netscan after correlate** | Blanket netscan typical |
+| Architectural verifier | **Exit-code gate** | None |
+| Hallucination catch | **100%** on injected tests | 0% (no verifier) |
+| Autonomous self-correction | **`agent_loop.sh`** (no LLM) | Prompt retry only |
+| Reproducible benchmark JSON | **Yes** | Unmeasured |
+| Spoliation tests | **22** | Unmeasured |
 
 ## Engine severity (sample case)
 

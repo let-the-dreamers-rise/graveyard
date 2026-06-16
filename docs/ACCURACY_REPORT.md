@@ -67,9 +67,8 @@ Estimated Protocol SIFT baseline from ground truth file; GRAVEYARD numbers from 
 |----------|----------------|------------------------|--------------------|-----------------------|-------------|----------------|
 | Raw Volatility manual | Analyst diff | Manual | Manual | Manual | Analyst notes | Manual |
 | LLM-only triage | Unreliable | None | None | None | Chat history | None |
-| Protocol SIFT baseline | Agent judgment | No — blanket netscan | Prompt-only | Optional | Partial | Skills-dependent |
-| EvidenceChain ghost rule | Contradiction detector (1 of 7) | Part of multi-pass review | Architectural (MCP + phantom) | 4-pass engine | Signed receipts | Disk+memory+timeline |
-| **GRAVEYARD** | **Deterministic correlate** | **Yes — netscan after correlate** | **Architectural verifier** | **Mandatory exit-code loop** | **JSONL + sha256 audit log** | **Timeline parity lite** |
+| Protocol SIFT baseline (prompt-only) | Agent judgment | No — blanket netscan | Prompt-only | Optional | Partial | Skills-dependent |
+| **GRAVEYARD** | **Deterministic correlate** | **Yes — netscan after correlate** | **Architectural verifier** | **Mandatory exit-code loop** (`agent_loop.sh`) | **JSONL + sha256 audit log** | **Timeline parity lite** |
 
 ## Multi-artifact timeline parity (sample)
 

@@ -4,20 +4,20 @@
 
 GRAVEYARD is a Protocol SIFT extension for the [FIND EVIL! hackathon](https://findevil.devpost.com/) that detects **ghost processes**, **orphan sockets**, **timeline contradictions**, and hollow memory — then forces every finding through a **machine verifier** before a report ships.
 
-## Competitive metrics (reproducible)
+## Measured metrics (reproducible)
 
-| Metric | GRAVEYARD | Prompt-only baseline |
-|--------|-----------|----------------------|
+| Metric | GRAVEYARD | Baseline Protocol SIFT (simulated prompt-only) |
+|--------|-----------|-----------------------------------------------|
 | Ghost recall | **1.00** | 0.65 (est.) |
 | Orphan recall | **1.00** | 0.50 (est.) |
 | Combined F1 | **1.00** | 0.00 on 1-artifact sample* |
 | Ghost/orphan FPR | **0.00** | est. 0.12 |
 | Hallucination catch | **100%** (2/2) | 0% |
-| Overclaim rate | **0%** (verifier) | est. 35% |
-| Self-correction | **Architectural** | None |
+| Overclaim rate | **0%** (verifier gate) | est. 35% |
+| Self-correction | **Architectural** (`agent_loop.sh`) | None |
 | MCP tools | **8** read-only | varies |
-| Spoliation tests | **22** | varies |
-| Multi-artifact | Engine + timeline + contradictions | ghost-only |
+| Spoliation tests | **22** | unmeasured |
+| Multi-artifact | Engine + timeline + contradictions | ghost-only typical |
 
 \*Baseline `int(n*recall)` on 1-artifact sample rounds 0.65 → 0 detected. GRAVEYARD advantage is measured detection + architectural verifier.
 

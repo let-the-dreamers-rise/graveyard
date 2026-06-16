@@ -14,7 +14,7 @@ Deterministic ghost-artifact engine with architectural self-correction — measu
 
 ## Inspiration
 
-Protocol SIFT finds hidden PIDs — but agents still write "malicious C2 beacon" in observations without proof. Council-SIFT and EvidenceChain show what's possible at platform scale. GRAVEYARD ships the **verifier + measured accuracy + autonomous correction loop** that makes memory ghost hunting **auditable and reproducible** today — without claiming zero hallucinations we can't prove on live cases.
+Protocol SIFT finds hidden PIDs — but agents still write "malicious C2 beacon" in observations without proof. GRAVEYARD ships the **verifier + measured accuracy + autonomous correction loop** that makes memory ghost hunting **auditable and reproducible** today — without claiming zero hallucinations we can't prove on live cases.
 
 ## What it does
 
@@ -52,22 +52,22 @@ bash scripts/agent_loop.sh examples/sample_exports
 bash scripts/spoliation_test.sh
 ```
 
-| Metric | GRAVEYARD | Baseline (simulated) | Council-SIFT / EvidenceChain |
-|--------|-----------|----------------------|------------------------------|
-| Ghost recall | **1.00** | 0.65 (est.) | Platform-dependent |
-| Orphan recall | **1.00** | 0.50 (est.) | Ghost-only tools miss orphans |
-| Combined F1 | **1.00** | 0.00 on 1-artifact sample* | Often unmeasured |
-| Ghost/orphan FPR | **0.00** | est. 0.12 | Unmeasured |
-| Hallucination catch | **100%** (2/2) | 0% | Prompt claims vary |
-| Overclaim rate | **0%** (verifier gate) | est. 35% | Unmeasured |
-| Self-correction | **Architectural loop** | None | Varies |
-| MCP tools | **8 read-only** | 3-lite common | Platform bundles |
-| Spoliation tests | **22** | unmeasured | Varies |
-| Multi-artifact | Engine + contradictions | Ghost-only | Full chain (EvidenceChain) |
+| Metric | GRAVEYARD | Baseline Protocol SIFT (simulated prompt-only) |
+|--------|-----------|-----------------------------------------------|
+| Ghost recall | **1.00** | 0.65 (est.) |
+| Orphan recall | **1.00** | 0.50 (est.) |
+| Combined F1 | **1.00** | 0.00 on 1-artifact sample* |
+| Ghost/orphan FPR | **0.00** | est. 0.12 |
+| Hallucination catch | **100%** (2/2) | 0% |
+| Overclaim rate | **0%** (verifier gate) | est. 35% |
+| Self-correction | **Architectural loop** (`agent_loop.sh`) | None |
+| MCP tools | **8 read-only** | varies |
+| Spoliation tests | **22** | unmeasured |
+| Multi-artifact | Engine + timeline + contradictions | ghost-only typical |
 
 *Honest note: baseline uses `int(n*recall)` — on our 1-ghost sample, 0.65 rounds to zero detected. GRAVEYARD still wins on measured detection + verifier. Live SRL-2018 numbers require your memory image.*
 
-## Why we win (competitive positioning)
+## Key differentiators
 
 | Tiebreaker criterion | GRAVEYARD proof |
 |---------------------|-----------------|
@@ -79,11 +79,13 @@ bash scripts/spoliation_test.sh
 | **Audit trail** | sha256 JSONL; verifier.jsonl rejection reasons |
 | **Severity ranking** | Ghost+orphan same PID → score 90 (critical) |
 
-**vs Council-SIFT:** We don't replicate full council orchestration — we ship the **verifier gate + measured metrics + agent loop** their agents should pass through. Council retries prompts; GRAVEYARD **blocks the report** until citations match exports.
+**Architectural verification:** The report **blocks** until citations match exports — not prompt retries. `verify_findings.py` REJECTs attribution, phantom artifacts, and fake citations with exit code 1.
 
-**vs EvidenceChain:** We extend beyond ghost-only with timeline contradictions and orphan elevation — in ~1200 lines any SIFT student runs today, with **reproducible benchmark JSON** EvidenceChain-style platforms rarely publish.
+**Ghost-first pipeline:** Correlate runs before netscan; analysts focus netscan on ghost/orphan PIDs flagged by the engine — not blanket scanning.
 
-**vs Sentinel-MCP:** We expose **8 typed forensic tools** with `spoliation_check` and `benchmark_accuracy` — not generic shell. Every tool is read-only and grep-auditable.
+**Measured reproducibility:** Side-by-side benchmark JSON vs documented prompt-only baseline estimates — judges re-run one command and get the same numbers.
+
+**Typed MCP surface:** **8 read-only forensic tools** including `spoliation_check` and `benchmark_accuracy` — grep-auditable, no generic shell.
 
 ## Challenges we ran into
 
