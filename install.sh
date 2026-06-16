@@ -57,14 +57,23 @@ Quick test (offline with sample data):
   cd $REPO_DIR
   pip install -r requirements.txt 2>/dev/null || true
   bash run_demo.sh
+  bash scripts/agent_loop.sh examples/sample_exports
+  python3 scripts/benchmark_accuracy.py \\
+    --exports examples/sample_exports \\
+    --ground-truth examples/ground_truth_srl2018_sample.json \\
+    --findings examples/findings_draft_v2_pass.json \\
+    --output analysis/benchmark_metrics.json \\
+    --baseline-out analysis/baseline_vs_graveyard.json \\
+    --summary-table
+  bash scripts/spoliation_test.sh
 
 Memory triage workflow:
   1. Open case in Cursor with AGENTS.md
   2. bash scripts/run_live_triage.sh /cases/graveyard/evidence/mem.raw /cases/graveyard
      OR run Volatility plugins manually; tee all output to exports/
-  3. Run graveyard_correlate.py — hunt ghosts before netscan deep-dive
-  4. Draft findings JSON → verify_findings.py
+  3. bash scripts/agent_loop.sh /cases/graveyard/exports /cases/graveyard
+     OR: graveyard_engine.py → draft findings → verify_findings.py
+  4. On REJECT: auto_correct_findings.py rebuilds from engine facts (max 3 iterations)
   5. python3 scripts/benchmark_accuracy.py --exports ./exports --ground-truth examples/ground_truth_srl2018_sample.json
-  6. On REJECT: fix and re-run (max 3 iterations)
 
 EOF

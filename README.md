@@ -10,14 +10,18 @@ GRAVEYARD is a Protocol SIFT extension for the [FIND EVIL! hackathon](https://fi
 |--------|-----------|----------------------|
 | Ghost recall | **1.00** | 0.65 (est.) |
 | Orphan recall | **1.00** | 0.50 (est.) |
-| Combined F1 | **1.00** | ~0.58 (est.) |
+| Combined F1 | **1.00** | 0.00 on 1-artifact sample* |
+| Ghost/orphan FPR | **0.00** | est. 0.12 |
 | Hallucination catch | **100%** (2/2) | 0% |
+| Overclaim rate | **0%** (verifier) | est. 35% |
 | Self-correction | **Architectural** | None |
 | MCP tools | **8** read-only | varies |
 | Spoliation tests | **22** | varies |
 | Multi-artifact | Engine + timeline + contradictions | ghost-only |
 
-Run: `python scripts/benchmark_accuracy.py --exports examples/sample_exports --ground-truth examples/ground_truth_srl2018_sample.json --findings examples/findings_draft_v2_pass.json`
+\*Baseline `int(n*recall)` on 1-artifact sample rounds 0.65 → 0 detected. GRAVEYARD advantage is measured detection + architectural verifier.
+
+Run: `python scripts/benchmark_accuracy.py --exports examples/sample_exports --ground-truth examples/ground_truth_srl2018_sample.json --findings examples/findings_draft_v2_pass.json --summary-table`
 
 ## Why GRAVEYARD?
 
@@ -56,6 +60,32 @@ git clone https://github.com/let-the-dreamers-rise/graveyard.git
 cd graveyard
 bash install.sh
 bash scripts/download_sample.sh   # tries Egnyte; prints manual steps if auth required
+```
+
+### Post-install commands (SIFT)
+
+Run these after `install.sh` to validate the full stack:
+
+```bash
+cd graveyard   # or cd /cases/graveyard after install copies tooling
+pip install -r requirements.txt
+
+# Offline validation (no memory image required)
+bash run_demo.sh                                    # engine + agent loop demo
+bash scripts/agent_loop.sh examples/sample_exports  # tiebreaker: REJECT → auto-correct → PASS
+python3 scripts/benchmark_accuracy.py \
+  --exports examples/sample_exports \
+  --ground-truth examples/ground_truth_srl2018_sample.json \
+  --findings examples/findings_draft_v2_pass.json \
+  --output analysis/benchmark_metrics.json \
+  --baseline-out analysis/baseline_vs_graveyard.json \
+  --summary-table
+bash scripts/spoliation_test.sh                     # 22 spoliation tests
+python3 tests/test_spoliation.py
+
+# Live triage (requires memory image)
+bash scripts/run_live_triage.sh /cases/graveyard/evidence/mem.raw /cases/graveyard
+bash scripts/agent_loop.sh /cases/graveyard/exports /cases/graveyard
 ```
 
 Offline demo with bundled sample exports:

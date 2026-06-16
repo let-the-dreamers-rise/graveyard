@@ -70,7 +70,10 @@
   "baseline_protocol_sift": {
     "ghost_recall": 0.65,
     "orphan_recall": 0.50,
+    "simulated_overclaim_rate": 0.35,
+    "simulated_false_positive_rate": 0.12,
     "attribution_control": "prompt_only",
-    "self_correction_gate": false
+    "self_correction_gate": false,
+    "note": "Estimated prompt-only baseline — not a live Council-SIFT/EvidenceChain run"
   }
 }

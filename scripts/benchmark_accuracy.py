@@ -173,6 +173,22 @@ def score_hallucinations(
     }
 
 
+def _metrics_from_counts(tp: int, fp: int, fn: int) -> dict[str, float | int]:
+    precision = tp / (tp + fp) if (tp + fp) else 1.0
+    recall = tp / (tp + fn) if (tp + fn) else 1.0
+    f1 = 2 * precision * recall / (precision + recall) if (precision + recall) else 0.0
+    fpr = fp / (fp + tp) if (fp + tp) else 0.0
+    return {
+        "true_positives": tp,
+        "false_positives": fp,
+        "false_negatives": fn,
+        "precision": round(precision, 4),
+        "recall": round(recall, 4),
+        "f1": round(f1, 4),
+        "false_positive_rate": round(fpr, 4),
+    }
+
+
 def simulate_baseline_overclaims(gt: dict[str, Any]) -> dict[str, Any]:
     """
     Simulate Protocol SIFT prompt-only baseline shipping overclaims.
@@ -185,17 +201,37 @@ def simulate_baseline_overclaims(gt: dict[str, Any]) -> dict[str, Any]:
 
     ghost_recall = baseline.get("ghost_recall", 0.65)
     orphan_recall = baseline.get("orphan_recall", 0.50)
+    baseline_fpr = baseline.get("simulated_false_positive_rate", 0.12)
 
-    # Simulated: baseline misses artifacts + ships false attribution (not caught architecturally)
+    # Simulated: baseline misses artifacts + ships false positives from overclaiming
     baseline_detected_ghosts = int(n_ghosts * ghost_recall)
     baseline_detected_orphans = int(n_orphans * orphan_recall)
     baseline_missed_ghosts = n_ghosts - baseline_detected_ghosts
     baseline_missed_orphans = n_orphans - baseline_detected_orphans
 
+    ghost_fp = max(1, round(baseline_detected_ghosts * baseline_fpr)) if n_ghosts else 0
+    orphan_fp = max(1, round(baseline_detected_orphans * baseline_fpr)) if n_orphans else 0
+    if baseline_detected_ghosts == 0 and n_ghosts:
+        ghost_fp = 0
+    if baseline_detected_orphans == 0 and n_orphans:
+        orphan_fp = 0
+
+    ghost_metrics = _metrics_from_counts(baseline_detected_ghosts, ghost_fp, baseline_missed_ghosts)
+    orphan_metrics = _metrics_from_counts(baseline_detected_orphans, orphan_fp, baseline_missed_orphans)
+    combined_tp = ghost_metrics["true_positives"] + orphan_metrics["true_positives"]
+    combined_fp = ghost_metrics["false_positives"] + orphan_metrics["false_positives"]
+    combined_fn = ghost_metrics["false_negatives"] + orphan_metrics["false_negatives"]
+    combined = _metrics_from_counts(combined_tp, combined_fp, combined_fn)
+
     return {
         "label": "Protocol SIFT prompt-only baseline (simulated from ground truth)",
         "ghost_recall": ghost_recall,
         "orphan_recall": orphan_recall,
+        "ghost_f1": ghost_metrics["f1"],
+        "orphan_f1": orphan_metrics["f1"],
+        "combined_f1": combined["f1"],
+        "ghost_false_positive_rate": ghost_metrics["false_positive_rate"],
+        "orphan_false_positive_rate": orphan_metrics["false_positive_rate"],
         "attribution_control": baseline.get("attribution_control", "prompt_only"),
         "self_correction_gate": baseline.get("self_correction_gate", False),
         "simulated_ghosts_detected": baseline_detected_ghosts,
@@ -204,9 +240,10 @@ def simulate_baseline_overclaims(gt: dict[str, Any]) -> dict[str, Any]:
         "simulated_orphans_missed": baseline_missed_orphans,
         "simulated_overclaim_rate": baseline.get("simulated_overclaim_rate", 0.35),
         "hallucination_catch_rate": 0.0,
-        "note": (
+        "note": baseline.get(
+            "note",
             "Baseline has no architectural verifier — attribution overclaims ship unchecked. "
-            "GRAVEYARD verifier catches injected hallucination tests at measured rate."
+            "GRAVEYARD verifier catches injected hallucination tests at measured rate.",
         ),
     }
 
@@ -236,18 +273,48 @@ def build_baseline_comparison(metrics: dict[str, Any], gt: dict[str, Any]) -> di
         "delta": {
             "ghost_recall": round(g["recall"] - baseline_sim["ghost_recall"], 4),
             "orphan_recall": round(o["recall"] - baseline_sim["orphan_recall"], 4),
-            "combined_f1_advantage": round(
-                c["f1"] - (baseline_sim["ghost_recall"] + baseline_sim["orphan_recall"]) / 2, 4
+            "ghost_f1": round(g["f1"] - baseline_sim["ghost_f1"], 4),
+            "orphan_f1": round(o["f1"] - baseline_sim["orphan_f1"], 4),
+            "combined_f1": round(c["f1"] - baseline_sim["combined_f1"], 4),
+            "ghost_false_positive_rate": round(
+                baseline_sim["ghost_false_positive_rate"] - g["false_positive_rate"], 4
             ),
             "hallucination_catch_advantage": metrics["hallucination_guard"].get("hallucination_catch_rate"),
+            "overclaim_rate_avoided": baseline_sim.get("simulated_overclaim_rate"),
         },
         "winner_on_metric": {
             "ghost_recall": "graveyard" if g["recall"] >= baseline_sim["ghost_recall"] else "baseline",
             "orphan_recall": "graveyard" if o["recall"] >= baseline_sim["orphan_recall"] else "baseline",
+            "combined_f1": "graveyard" if c["f1"] >= baseline_sim["combined_f1"] else "baseline",
+            "false_positive_rate": "graveyard" if g["false_positive_rate"] <= baseline_sim["ghost_false_positive_rate"] else "baseline",
             "hallucination_control": "graveyard",
             "self_correction": "graveyard",
         },
     }
+
+
+def print_summary_table(metrics: dict[str, Any]) -> None:
+    """Print judge-friendly comparison table to stdout."""
+    bc = metrics["baseline_comparison"]
+    g = bc["graveyard"]
+    b = bc["baseline_protocol_sift"]
+    rows = [
+        ("Ghost recall", g["ghost_recall"], b["ghost_recall"]),
+        ("Orphan recall", g["orphan_recall"], b["orphan_recall"]),
+        ("Ghost F1", g["ghost_f1"], b.get("ghost_f1", "N/A")),
+        ("Orphan F1", g["orphan_f1"], b.get("orphan_f1", "N/A")),
+        ("Combined F1", g["combined_f1"], b.get("combined_f1", "N/A")),
+        ("Ghost FPR", g["ghost_false_positive_rate"], b.get("ghost_false_positive_rate", "N/A")),
+        ("Orphan FPR", g["orphan_false_positive_rate"], b.get("orphan_false_positive_rate", "N/A")),
+        ("Hallucination catch", g["hallucination_catch_rate"], b["hallucination_catch_rate"]),
+        ("Self-correction gate", g["self_correction_gate"], b["self_correction_gate"]),
+    ]
+    print("\n=== GRAVEYARD Benchmark Summary ===")
+    print(f"{'Metric':<22} {'GRAVEYARD':>12} {'Baseline':>12}")
+    print("-" * 48)
+    for name, gv, bv in rows:
+        print(f"{name:<22} {str(gv):>12} {str(bv):>12}")
+    print()
 
 
 def run_benchmark(
@@ -303,6 +370,11 @@ def main() -> int:
         default=Path("analysis/baseline_vs_graveyard.json"),
         help="Write baseline comparison JSON",
     )
+    parser.add_argument(
+        "--summary-table",
+        action="store_true",
+        help="Print judge-friendly comparison table to stdout",
+    )
     args = parser.parse_args()
 
     if not args.exports.is_dir():
@@ -326,7 +398,10 @@ def main() -> int:
         args.baseline_out.write_text(baseline_json + "\n", encoding="utf-8")
         print(f"Baseline comparison written: {args.baseline_out}")
 
-    print(output_json)
+    if args.summary_table:
+        print_summary_table(metrics)
+    else:
+        print(output_json)
     return 0
 
 
